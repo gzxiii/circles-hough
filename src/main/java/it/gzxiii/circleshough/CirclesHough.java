@@ -2,6 +2,8 @@ package it.gzxiii.circleshough;
 
 
 import it.gzxiii.circleshough.constants.ErrorCodes;
+import it.gzxiii.circleshough.transformations.*;
+import it.gzxiii.circleshough.transformations.Sobel;
 import it.gzxiii.circleshough.utils.Utils;
 
 import java.awt.image.BufferedImage;
@@ -25,7 +27,7 @@ public class CirclesHough{
     public static void main(String[] args){
         logger.log(Level.INFO, "Circle Hough Detector starting...");
 
-        if (args.length < 2) {
+        if (args.length < 1) {
             logger.log(Level.SEVERE, ErrorCodes.NOT_ENOUGH_ARGS_MSG);
             System.exit(ErrorCodes.NOT_ENOUGH_ARGS);
         }
@@ -37,23 +39,73 @@ public class CirclesHough{
 
         Image sourceImage = new Image(rootDir + args[0]);
 
-        //Acquire image
+        /* Preliminar tasks: */
+        /* Acquiring image */
         getImageDetails(sourceImage);
         logger.log(Level.INFO,
                 String.format("Acquired %d x %d px image from %s",
                         sourceImage.width, sourceImage.height, args[0]));
 
-        //Convert it to gray scale
+        /* Converting it to gray scale */
         logger.log(Level.INFO, "Converting image in grayscale");
         sourceImage.img = sourceImage.convert2Gray();
         saveImageToFile("res_gray", sourceImage);
 
 
-        //Apply Gaussian Blur
+        /* Applying Gaussian Blur */
         logger.log(Level.INFO, "Applying gaussian blur");
         double sigma = Double.parseDouble(args[1]);
-        sourceImage.img =  sourceImage.gaussianBlur(BufferedImage.TYPE_BYTE_GRAY, sigma);
+        sourceImage.img =  sourceImage.gaussianBlur(sigma);
         saveImageToFile("res_blur", sourceImage);
+
+        /* Canny Edge Detection: */
+        /* *****************************************************
+         1) SOBEL:
+            Convolve the blurred grayscale image with the
+            Sobel kernel horizontally and vertically to find
+            the magnitude and direction of each pixel
+        ******************************************************* */
+        sourceImage.gx = Sobel.Convolve_X(sourceImage.imgArray);
+        sourceImage.img = Common.intMatrix2BufferedImage(sourceImage.gx, BufferedImage.TYPE_BYTE_GRAY);
+        saveImageToFile("res_sobel_x", sourceImage);
+        sourceImage.gy = Sobel.Convolve_Y(sourceImage.imgArray);
+        sourceImage.img = Common.intMatrix2BufferedImage(sourceImage.gy, BufferedImage.TYPE_BYTE_GRAY);
+        saveImageToFile("res_sobel_y", sourceImage);
+
+        /* *****************************************************
+         2) MAGNITUDE:
+            magnitude of gradient at each pixel.
+        ******************************************************* */
+        sourceImage.mag = CannyEdge.gradientMagnitude(sourceImage.gx, sourceImage.gy);
+        sourceImage.img = Common.doubleMatrix2BufferedImage(sourceImage.mag, BufferedImage.TYPE_BYTE_GRAY);
+        saveImageToFile("res_magnitude", sourceImage);
+
+        /* *****************************************************
+         3) DIRECTION:
+            direction of gradient at each pixel.
+        ******************************************************* */
+        sourceImage.dir = CannyEdge.gradientDirection(sourceImage.gx, sourceImage.gy);
+        sourceImage.img = Common.intMatrix2BufferedImage(sourceImage.dir, BufferedImage.TYPE_BYTE_GRAY);
+        saveImageToFile("res_direction", sourceImage);
+
+         /* *****************************************************
+         4) NON-MAXIMUM SUPPRESSION:
+            marking points where the magnitude is biggest.
+        ******************************************************* */
+        sourceImage.mag = CannyEdge.nonMaximumSuppression(sourceImage.mag, sourceImage.dir);
+        sourceImage.img = Common.doubleMatrix2BufferedImage(sourceImage.mag, BufferedImage.TYPE_BYTE_GRAY);
+        saveImageToFile("res_magnitude_suppression", sourceImage);
+
+        /* *****************************************************
+         5) HYSTERESIS:
+            avoid all 'weak' edge pixels unless they are directly adjacent to a 'strong' edge pixel.
+            Returning and saving the edges
+        ******************************************************* */
+        sourceImage.edges = CannyEdge.hysteresis(sourceImage.mag);
+        sourceImage.img = Common.intMatrix2BufferedImage(sourceImage.edges, BufferedImage.TYPE_BYTE_GRAY);
+        saveImageToFile("res_edge", sourceImage);
+
+        /* Circles Hough: */
 
 
 
