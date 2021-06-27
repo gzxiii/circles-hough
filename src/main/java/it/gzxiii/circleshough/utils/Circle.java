@@ -1,21 +1,25 @@
 package it.gzxiii.circleshough.utils;
 
-import it.gzxiii.circleshough.transformations.CircleHough;
-
 public class Circle implements Comparable<Circle>{
-    public static int x;
-    public static int y;
-    public static int r;
-    public static double magnitude;
+    public static short x;
+    public static short y;
+    public static short r;
+    public static short magnitude;
 
-    public Circle(int x, int y, int r, double magnitude) {
-        this.x = x;
-        this.y = y;
-        this.r = r;
-        this.magnitude = magnitude;
+    public Circle(int x, int y, int r){
+        Circle.x = (short) x;
+        Circle.y = (short) y;
+        Circle.r = (short) r;
+        Circle.magnitude = 1;
+    }
+    public Circle(int x, int y, int r, int magnitude) {
+        Circle.x = (short) x;
+        Circle.y = (short) y;
+        Circle.r = (short) r;
+        Circle.magnitude = (short) magnitude;
     }
 
-    public static double getMagnitude() {
+    public double getMagnitude() {
         return magnitude;
     }
 

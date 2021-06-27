@@ -10,6 +10,7 @@ import java.awt.image.BufferedImage;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static it.gzxiii.circleshough.transformations.Common.BuffImg2Matrix;
 import static it.gzxiii.circleshough.utils.Utils.imageRead;
 
 public class Main {
@@ -27,7 +28,7 @@ public class Main {
     public static void main(String[] args){
         logger.log(Level.INFO, "Circle Hough Detector starting...");
 
-        if (args.length < 4) {
+        if (args.length < 5) {
             logger.log(Level.SEVERE, ErrorCodes.NOT_ENOUGH_ARGS_MSG);
             System.exit(ErrorCodes.NOT_ENOUGH_ARGS);
         }
@@ -94,8 +95,8 @@ public class Main {
          4) NON-MAXIMUM SUPPRESSION:
             marking points where the magnitude is biggest.
         ******************************************************* */
-        sourceIMG.mag = CannyEdge.nonMaximumSuppression(sourceIMG.mag, sourceIMG.dir);
-        sourceIMG.img = Common.doubleMatrix2BufferedImage(sourceIMG.mag, BufferedImage.TYPE_BYTE_GRAY);
+        sourceIMG.img = Common.doubleMatrix2BufferedImage(CannyEdge.nonMaximumSuppression(sourceIMG.mag, sourceIMG.dir)
+                , BufferedImage.TYPE_BYTE_GRAY);
         saveImageToFile("res_magnitude_suppression", sourceIMG);
 
         /* *****************************************************
@@ -104,8 +105,7 @@ public class Main {
             Returning and saving the edges
         ******************************************************* */
         sourceIMG.edges = CannyEdge.hysteresis(sourceIMG.mag);
-        sourceIMG.img = Common.intMatrix2BufferedImage(sourceIMG.edges, BufferedImage.TYPE_BYTE_GRAY);
-        sourceIMG.edgesImg = sourceIMG.img;
+        sourceIMG.edgesImg = Common.intMatrix2BufferedImage(sourceIMG.edges, BufferedImage.TYPE_BYTE_GRAY);
         saveImageToFile("res_edge", sourceIMG);
 
         /* Circles Hough: */
@@ -114,10 +114,11 @@ public class Main {
         sourceIMG.img = Common.doubleMatrix2BufferedImage(sourceIMG.houghSpaces, BufferedImage.TYPE_BYTE_GRAY);
         saveImageToFile("res_hough_spaces", sourceIMG);
 
-        /* The circles detected will be displayed in red directly to the source image */
-        logger.log(Level.INFO, "Drawing Circles transform");
-        sourceIMG.drawCircles();
-        saveImageToFile("circles_detected", sourceIMG);
+        /* TODO - missing detection on the original image */
+//        /* The circles detected will be displayed in red directly to the source image */
+//        logger.log(Level.INFO, "Drawing Circles transform");
+//        sourceIMG.drawCircles(Integer.parseInt(args[4]));
+//        saveImageToFile("circles_detected", sourceIMG);
 
 
     }

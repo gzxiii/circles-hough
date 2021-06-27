@@ -1,14 +1,16 @@
 package it.gzxiii.circleshough.transformations;
 
 import it.gzxiii.circleshough.IMG;
+import it.gzxiii.circleshough.Main;
 import it.gzxiii.circleshough.utils.Circle;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.logging.Level;
 
 public class CircleHough {
 
-    private static int threshold = 150;
+    private static final int threshold = 150;
 
     public static int minimumRadius;
     public static int maximumRadius;
@@ -27,15 +29,15 @@ public class CircleHough {
      * @return double[][]
      */
     public static double[][] houghTransform(IMG sourceIMG, int minR, int maxR ) {
-        BufferedImage image = sourceIMG.img;
+        BufferedImage image = sourceIMG.edgesImg;
         imgWidth = image.getWidth();
         imgHeight = image.getHeight();
         minimumRadius = minR;
         maximumRadius = maxR;
         radius = maximumRadius == 0 ? Integer.min(imgHeight, imgWidth) : maximumRadius;
-        sourceIMG.circles = new ArrayList<Circle>();
+        IMG.circles = new ArrayList<>();
         double d = 0;
-        int[][][] houghSpaceValues = new int[imgWidth][imgHeight][radius];
+        int[][][] accumulator = new int[imgWidth][imgHeight][radius];
 
         double[][] imgArray = Common.BuffImg2Matrix(image);
 
@@ -47,10 +49,10 @@ public class CircleHough {
                             int rcos = (int) Math.floor(x - r * Math.cos(t * Math.PI / 180));
                             int rsin = (int) Math.floor(y - r * Math.sin(t * Math.PI / 180));
 
-                            if (!((rcos < 0 || rcos > imgWidth - 1) || (rsin < 0 || rsin > imgHeight - 1))) {
-                                houghSpaceValues[rcos][rsin][r] += 1;
-                                if (houghSpaceValues[rcos][rsin][r] > d) {
-                                    d = houghSpaceValues[rcos][rsin][r];
+                            if (!(( 0 > rcos  || rcos > imgWidth - 1) || (0 > rsin  || rsin > imgHeight - 1))) {
+                                accumulator[rcos][rsin][r] += 1;
+                                if (accumulator[rcos][rsin][r] > d) {
+                                    d = accumulator[rcos][rsin][r];
                                 }
                             }
                         }
@@ -63,8 +65,9 @@ public class CircleHough {
         for (int x = 0; x < imgWidth; x++) {
             for (int y = 0; y < imgHeight; y++) {
                 for (int r = minR; r < radius; r++) {
-                    sourceIMG.circles.add(new Circle(x,y,r, houghSpaceValues[x][y][r]));
-                    houghSpace[x][y] = Math.floor((houghSpaceValues[x][y][r] * 255) / d);
+                    IMG.circles.add(new Circle(x,y,r, accumulator[x][y][r]));
+                    double ratio = 650/d; // 650 for accentuation
+                    houghSpace[x][y] = Math.floor(ratio * accumulator[x][y][r]);
                 }
             }
 

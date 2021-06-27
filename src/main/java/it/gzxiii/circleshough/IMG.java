@@ -6,8 +6,11 @@ import it.gzxiii.circleshough.utils.Circle;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.awt.image.RescaleOp;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static it.gzxiii.circleshough.transformations.Common.*;
 
@@ -68,20 +71,58 @@ public class IMG implements ImageTransformations {
     /**
      * Draw circles found after hough transform
      * @since 0.0.3
+     * @param num_circles number of desired circles
      * @author gzxiii
      */
-    public void drawCircles(){
+    public void drawCircles(int num_circles){
         BufferedImage out = new BufferedImage(edgesImg.getWidth(), edgesImg.getHeight(), BufferedImage.TYPE_INT_RGB);
-        Collections.sort(circles, Collections.reverseOrder());
-        out.getGraphics().drawImage(blurred, 0, 0, null);
+
+        RescaleOp op = new RescaleOp(0.5f, 0, null);
+        BufferedImage totalTmp = scaleTotal(this);
+        BufferedImage total = op.filter(totalTmp, totalTmp);
+
+        circles.sort(Collections.reverseOrder());
+
+        out.getGraphics().drawImage(total, 0, 0, null);
         Graphics2D g = out.createGraphics();
-        g.setColor(Color.RED);
-        for(int c = 0; c < 1; c++){
+        g.setColor(Color.GREEN);
+
+        for(int c = 0; c < num_circles; c++){
             Circle circle = circles.get(c);
-            double a =  circle.x - circle.r * Math.cos(0 * Math.PI / 180);
-            double b =  circle.y - circle.r * Math.sin(90 * Math.PI / 180);
-            g.drawOval((int)a,(int)b,2*circle.r,2*circle.r);
+            double a =  Circle.x - Circle.r * Math.cos(0 * Math.PI / 180);
+            double b =  Circle.y - Circle.r * Math.sin(90 * Math.PI / 180);
+            g.drawOval((int)a,(int)b,2* Circle.r,2* Circle.r);
         }
         img = out;
+    }
+
+    /**
+     * Scale image
+     * @since 0.0.4
+     * @author gzxiii
+     */
+    public static BufferedImage scaleTotal(IMG image){
+        BufferedImage total = new BufferedImage(image.edgesImg.getWidth(), image.edgesImg.getHeight(), BufferedImage.TYPE_BYTE_GRAY);
+        double max = 0;
+        for(int i = 0; i< image.edgesImg.getWidth(); i++){
+            for(int j = 0; j<image.edgesImg.getHeight(); j++){
+                if(image.edges[i][j]>max){
+                    max = image.edges[i][j];
+                }
+            }
+        }
+        for(int i = 0; i< image.edgesImg.getWidth(); i++){
+            for(int j = 0; j<image.edgesImg.getHeight(); j++){
+                //maps every pixel to a grayscale value between 0 and 255 from between 0 and the max value in sobelTotal
+                double ratio = 500/max;
+                int rgb = new Color((int)ratio * image.edges[i][j],
+                        (int)ratio * image.edges[i][j],
+                        (int)ratio * image.edges[i][j]).getRGB();
+                total.setRGB(i,j,rgb);
+            }
+        }
+
+        RescaleOp op = new RescaleOp(20.0f, 0, null);
+        return op.filter(total, total);
     }
 }
