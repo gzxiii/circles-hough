@@ -18,7 +18,7 @@ Run the executable with the following arguments:
 * Gaussian Blur Sigma
 * Minimum Radius
 * Maximum Radius
-* Number of circles to draw (not implemented yet) 
+* Number of circles to draw
 
 For istance:
 ```

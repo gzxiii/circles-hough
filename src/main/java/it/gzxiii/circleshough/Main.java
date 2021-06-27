@@ -115,10 +115,10 @@ public class Main {
         saveImageToFile("res_hough_spaces", sourceIMG);
 
         /* TODO - missing detection on the original image */
-//        /* The circles detected will be displayed in red directly to the source image */
-//        logger.log(Level.INFO, "Drawing Circles transform");
-//        sourceIMG.drawCircles(Integer.parseInt(args[4]));
-//        saveImageToFile("circles_detected", sourceIMG);
+        /* The circles detected will be displayed in red directly to the source image */
+        logger.log(Level.INFO, "Drawing Circles transform");
+        sourceIMG.drawCircles(Integer.parseInt(args[4]));
+        saveImageToFile("circles_detected", sourceIMG);
 
 
     }

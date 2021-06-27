@@ -89,9 +89,9 @@ public class IMG implements ImageTransformations {
 
         for(int c = 0; c < num_circles; c++){
             Circle circle = circles.get(c);
-            double a =  Circle.x - Circle.r * Math.cos(0 * Math.PI / 180);
-            double b =  Circle.y - Circle.r * Math.sin(90 * Math.PI / 180);
-            g.drawOval((int)a,(int)b,2* Circle.r,2* Circle.r);
+            double a =  circle.x - circle.r * Math.cos(0 * Math.PI / 180);
+            double b =  circle.y - circle.r * Math.sin(90 * Math.PI / 180);
+            g.drawOval((int)a,(int)b,2* circle.r,2* circle.r);
         }
         img = out;
     }
