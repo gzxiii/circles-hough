@@ -1,6 +1,6 @@
 package it.gzxiii.circleshough.utils;
 
-import it.gzxiii.circleshough.CirclesHough;
+import it.gzxiii.circleshough.Main;
 import it.gzxiii.circleshough.constants.ErrorCodes;
 
 import javax.imageio.ImageIO;
@@ -35,7 +35,7 @@ public class Utils {
         if (! directory.exists()){
             boolean dir = directory.mkdir();
             if(!dir){
-                CirclesHough.logger.log(Level.SEVERE, ErrorCodes.UNABLE_TO_SAVE_IMAGE_MSG);
+                Main.logger.log(Level.SEVERE, ErrorCodes.UNABLE_TO_SAVE_IMAGE_MSG);
                 System.exit(ErrorCodes.UNABLE_TO_SAVE_IMAGE);
             }
         }

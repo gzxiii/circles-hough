@@ -12,9 +12,9 @@ import java.util.logging.Logger;
 
 import static it.gzxiii.circleshough.utils.Utils.imageRead;
 
-public class CirclesHough{
+public class Main {
 
-    public static final Logger logger = Logger.getLogger(CirclesHough.class.getName());
+    public static final Logger logger = Logger.getLogger(Main.class.getName());
     private static final String rootDir = System.getProperty("user.dir") + "/";
 
     /**
@@ -27,7 +27,7 @@ public class CirclesHough{
     public static void main(String[] args){
         logger.log(Level.INFO, "Circle Hough Detector starting...");
 
-        if (args.length < 1) {
+        if (args.length < 4) {
             logger.log(Level.SEVERE, ErrorCodes.NOT_ENOUGH_ARGS_MSG);
             System.exit(ErrorCodes.NOT_ENOUGH_ARGS);
         }
@@ -37,76 +37,87 @@ public class CirclesHough{
             System.exit(ErrorCodes.ARG_NOT_VALID);
         }
 
-        Image sourceImage = new Image(rootDir + args[0]);
+        IMG sourceIMG = new IMG(rootDir + args[0]);
 
         /* Preliminar tasks: */
         /* Acquiring image */
-        getImageDetails(sourceImage);
+        getImageDetails(sourceIMG);
         logger.log(Level.INFO,
                 String.format("Acquired %d x %d px image from %s",
-                        sourceImage.width, sourceImage.height, args[0]));
+                        sourceIMG.width, sourceIMG.height, args[0]));
 
         /* Converting it to gray scale */
         logger.log(Level.INFO, "Converting image in grayscale");
-        sourceImage.img = sourceImage.convert2Gray();
-        saveImageToFile("res_gray", sourceImage);
+        sourceIMG.img = sourceIMG.convert2Gray();
+        saveImageToFile("res_gray", sourceIMG);
 
 
         /* Applying Gaussian Blur */
         logger.log(Level.INFO, "Applying gaussian blur");
         double sigma = Double.parseDouble(args[1]);
-        sourceImage.img =  sourceImage.gaussianBlur(sigma);
-        saveImageToFile("res_blur", sourceImage);
+        sourceIMG.img =  sourceIMG.gaussianBlur(sigma);
+        sourceIMG.blurred = sourceIMG.img;
+        saveImageToFile("res_blur", sourceIMG);
 
         /* Canny Edge Detection: */
+        logger.log(Level.INFO, "Detecting Edges with Canny operator");
         /* *****************************************************
          1) SOBEL:
             Convolve the blurred grayscale image with the
             Sobel kernel horizontally and vertically to find
             the magnitude and direction of each pixel
         ******************************************************* */
-        sourceImage.gx = Sobel.Convolve_X(sourceImage.imgArray);
-        sourceImage.img = Common.intMatrix2BufferedImage(sourceImage.gx, BufferedImage.TYPE_BYTE_GRAY);
-        saveImageToFile("res_sobel_x", sourceImage);
-        sourceImage.gy = Sobel.Convolve_Y(sourceImage.imgArray);
-        sourceImage.img = Common.intMatrix2BufferedImage(sourceImage.gy, BufferedImage.TYPE_BYTE_GRAY);
-        saveImageToFile("res_sobel_y", sourceImage);
+        sourceIMG.gx = Sobel.Convolve_X(sourceIMG.imgArray);
+        sourceIMG.img = Common.intMatrix2BufferedImage(sourceIMG.gx, BufferedImage.TYPE_BYTE_GRAY);
+        saveImageToFile("res_sobel_x", sourceIMG);
+        sourceIMG.gy = Sobel.Convolve_Y(sourceIMG.imgArray);
+        sourceIMG.img = Common.intMatrix2BufferedImage(sourceIMG.gy, BufferedImage.TYPE_BYTE_GRAY);
+        saveImageToFile("res_sobel_y", sourceIMG);
 
         /* *****************************************************
          2) MAGNITUDE:
             magnitude of gradient at each pixel.
         ******************************************************* */
-        sourceImage.mag = CannyEdge.gradientMagnitude(sourceImage.gx, sourceImage.gy);
-        sourceImage.img = Common.doubleMatrix2BufferedImage(sourceImage.mag, BufferedImage.TYPE_BYTE_GRAY);
-        saveImageToFile("res_magnitude", sourceImage);
+        sourceIMG.mag = CannyEdge.gradientMagnitude(sourceIMG.gx, sourceIMG.gy);
+        sourceIMG.img = Common.doubleMatrix2BufferedImage(sourceIMG.mag, BufferedImage.TYPE_BYTE_GRAY);
+        saveImageToFile("res_magnitude", sourceIMG);
 
         /* *****************************************************
          3) DIRECTION:
             direction of gradient at each pixel.
         ******************************************************* */
-        sourceImage.dir = CannyEdge.gradientDirection(sourceImage.gx, sourceImage.gy);
-        sourceImage.img = Common.intMatrix2BufferedImage(sourceImage.dir, BufferedImage.TYPE_BYTE_GRAY);
-        saveImageToFile("res_direction", sourceImage);
+        sourceIMG.dir = CannyEdge.gradientDirection(sourceIMG.gx, sourceIMG.gy);
+        sourceIMG.img = Common.intMatrix2BufferedImage(sourceIMG.dir, BufferedImage.TYPE_BYTE_GRAY);
+        saveImageToFile("res_direction", sourceIMG);
 
          /* *****************************************************
          4) NON-MAXIMUM SUPPRESSION:
             marking points where the magnitude is biggest.
         ******************************************************* */
-        sourceImage.mag = CannyEdge.nonMaximumSuppression(sourceImage.mag, sourceImage.dir);
-        sourceImage.img = Common.doubleMatrix2BufferedImage(sourceImage.mag, BufferedImage.TYPE_BYTE_GRAY);
-        saveImageToFile("res_magnitude_suppression", sourceImage);
+        sourceIMG.mag = CannyEdge.nonMaximumSuppression(sourceIMG.mag, sourceIMG.dir);
+        sourceIMG.img = Common.doubleMatrix2BufferedImage(sourceIMG.mag, BufferedImage.TYPE_BYTE_GRAY);
+        saveImageToFile("res_magnitude_suppression", sourceIMG);
 
         /* *****************************************************
          5) HYSTERESIS:
             avoid all 'weak' edge pixels unless they are directly adjacent to a 'strong' edge pixel.
             Returning and saving the edges
         ******************************************************* */
-        sourceImage.edges = CannyEdge.hysteresis(sourceImage.mag);
-        sourceImage.img = Common.intMatrix2BufferedImage(sourceImage.edges, BufferedImage.TYPE_BYTE_GRAY);
-        saveImageToFile("res_edge", sourceImage);
+        sourceIMG.edges = CannyEdge.hysteresis(sourceIMG.mag);
+        sourceIMG.img = Common.intMatrix2BufferedImage(sourceIMG.edges, BufferedImage.TYPE_BYTE_GRAY);
+        sourceIMG.edgesImg = sourceIMG.img;
+        saveImageToFile("res_edge", sourceIMG);
 
         /* Circles Hough: */
+        logger.log(Level.INFO, "Performing Hough transform");
+        sourceIMG.houghSpaces = CircleHough.houghTransform(sourceIMG, Integer.parseInt(args[2]), Integer.parseInt(args[3]));
+        sourceIMG.img = Common.doubleMatrix2BufferedImage(sourceIMG.houghSpaces, BufferedImage.TYPE_BYTE_GRAY);
+        saveImageToFile("res_hough_spaces", sourceIMG);
 
+        /* The circles detected will be displayed in red directly to the source image */
+        logger.log(Level.INFO, "Drawing Circles transform");
+        sourceIMG.drawCircles();
+        saveImageToFile("circles_detected", sourceIMG);
 
 
     }
@@ -115,14 +126,14 @@ public class CirclesHough{
      * Read Image from the file path and extract all the details.
      * @since 0.0.1
      * @author gzxiii
-     * @param sourceImage source image entire class
+     * @param sourceIMG source image entire class
      */
-    private static void getImageDetails(Image sourceImage){
+    private static void getImageDetails(IMG sourceIMG){
         try {
-            logger.log(Level.INFO, String.format("Processing %s", sourceImage.uri));
-            sourceImage.img = imageRead(sourceImage.uri);
-            sourceImage.width = sourceImage.img.getWidth();
-            sourceImage.height = sourceImage.img.getHeight();
+            logger.log(Level.INFO, String.format("Processing %s", sourceIMG.uri));
+            sourceIMG.img = imageRead(sourceIMG.uri);
+            sourceIMG.width = sourceIMG.img.getWidth();
+            sourceIMG.height = sourceIMG.img.getHeight();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -137,10 +148,10 @@ public class CirclesHough{
      * @author gzxiii
      * @param filename, sourceImage
      */
-    private static void saveImageToFile(String filename, Image sourceImage) {
+    private static void saveImageToFile(String filename, IMG sourceIMG) {
         try {
             logger.log(Level.INFO, String.format("Saving output to %s.jpg", filename));
-            Utils.imageSave(filename, sourceImage.img);
+            Utils.imageSave(filename, sourceIMG.img);
         } catch (Exception e) {
             e.printStackTrace();
             logger.log(Level.SEVERE, ErrorCodes.UNABLE_TO_SAVE_IMAGE_MSG);
