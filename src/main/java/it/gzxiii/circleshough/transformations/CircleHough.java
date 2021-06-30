@@ -46,13 +46,13 @@ public class CircleHough {
                 if (imgArray[x][y] > threshold) {
                     for (int r = 1; r < radius; r++) {
                         for (int t = 0; t <= 360; t++) {
-                            int rcos = (int) Math.floor(x - r * Math.cos(t * Math.PI / 180));
-                            int rsin = (int) Math.floor(y - r * Math.sin(t * Math.PI / 180));
+                            int a = (int) Math.floor(x - r * Math.cos(t * Math.PI / 180));
+                            int b = (int) Math.floor(y - r * Math.sin(t * Math.PI / 180));
 
-                            if (!(( 0 > rcos  || rcos > imgWidth - 1) || (0 > rsin  || rsin > imgHeight - 1))) {
-                                accumulator[rcos][rsin][r] += 1;
-                                if (accumulator[rcos][rsin][r] > d) {
-                                    d = accumulator[rcos][rsin][r];
+                            if (!(( 0 > a  || a > imgWidth - 1) || (0 > b  || b > imgHeight - 1))) {
+                                accumulator[a][b][r] += 1;
+                                if (accumulator[a][b][r] > d) {
+                                    d = accumulator[a][b][r]; //to create the hough space
                                 }
                             }
                         }
@@ -66,7 +66,7 @@ public class CircleHough {
             for (int y = 0; y < imgHeight; y++) {
                 for (int r = minR; r < radius; r++) {
                     IMG.circles.add(new Circle(x,y,r, accumulator[x][y][r]));
-                    double ratio = 650/d; // 650 for accentuation
+                    double ratio = 650/d;
                     houghSpace[x][y] = Math.floor(ratio * accumulator[x][y][r]);
                 }
             }

@@ -106,6 +106,7 @@ public class Main {
         ******************************************************* */
         sourceIMG.edges = CannyEdge.hysteresis(sourceIMG.mag);
         sourceIMG.edgesImg = Common.intMatrix2BufferedImage(sourceIMG.edges, BufferedImage.TYPE_BYTE_GRAY);
+        sourceIMG.img = sourceIMG.edgesImg;
         saveImageToFile("res_edge", sourceIMG);
 
         /* Circles Hough: */

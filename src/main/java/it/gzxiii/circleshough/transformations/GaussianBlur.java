@@ -4,7 +4,7 @@ package it.gzxiii.circleshough.transformations;
 
 public class GaussianBlur {
 
-    public final static int GAUSS_RADIUS =  15;
+    public final static int GAUSS_RADIUS =  5;
 
     /**
      * Creates the Gaussian Kernel

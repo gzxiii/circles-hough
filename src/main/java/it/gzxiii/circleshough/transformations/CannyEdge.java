@@ -140,9 +140,9 @@ public class CannyEdge {
             for (int c = 1; c < width; c++) {
                 double magCompare = magnitude[r][c];
 
-                if (magCompare >= high_trh) {
+                if (magCompare >= 240) {
                     bin[r - 1][c - 1] = 255;
-                } else if (magCompare < low_thr) {
+                } else if (magCompare < 0.3) {
                     bin[r - 1][c - 1] = 0;
                 } else {    //This could be separate method or lambda
                     boolean connected = false;
